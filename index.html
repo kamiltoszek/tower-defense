@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Tower Defense</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0e15">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tower Defense">
+<style>
+  :root{
+    --bg:#0b0e15; --panel:#131826; --panel2:#182034; --line:#253049;
+    --text:#dfe6f3; --dim:#8b95ab; --gold:#f5c542; --accent:#4da3ff; --danger:#ff5252;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:radial-gradient(1200px 700px at 50% -10%, #131a2c, var(--bg));
+    color:var(--text);
+    font-family:'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    display:flex; justify-content:center; align-items:flex-start;
+    padding:14px; user-select:none; -webkit-user-select:none;
+    -webkit-touch-callout:none; touch-action:manipulation; overscroll-behavior:none;
+  }
+  #wrap{ width:1206px; max-width:100%; }
+  /* ---------- HUD ---------- */
+  header#hud{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+    background:var(--panel); border:1px solid var(--line); border-bottom:none;
+    border-radius:12px 12px 0 0; padding:10px 14px; font-size:15px;
+  }
+  .brand{ font-weight:700; letter-spacing:.5px; margin-right:8px; font-size:16px; }
+  .stat{
+    background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+    padding:6px 12px; white-space:nowrap; color:var(--dim);
+  }
+  .stat b{ color:var(--text); font-size:15px; margin-left:2px; }
+  .stat.gold b{ color:var(--gold); }
+  .stat.lives b{ color:#ff8a80; }
+  .stat.lives.low b{ color:var(--danger); animation:blink .7s infinite; }
+  .stat.wave b{ color:var(--accent); }
+  .stat.dim{ color:var(--dim); font-size:13px; }
+  @keyframes blink{ 50%{ opacity:.45; } }
+  header button{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:8px; padding:8px 13px; font-size:14px; cursor:pointer;
+    transition:background .12s, transform .05s; white-space:nowrap;
+  }
+  header button:hover:not(:disabled){ background:#202b45; }
+  header button:active:not(:disabled){ transform:translateY(1px); }
+  header button:disabled{ opacity:.45; cursor:default; }
+  header button.primary{ background:#1c4d2c; border-color:#2e7c43; color:#c8f5cf; font-weight:600; }
+  header button.primary:hover:not(:disabled){ background:#226036; }
+  header button.on{ background:#274b7a; border-color:#3f6fae; color:#cfe6ff; }
+  .spacer{ flex:1; }
+  /* ---------- Layout ---------- */
+  main{ display:flex; }
+  #stage{
+    position:relative; flex:1 1 auto; min-width:0; height:auto;
+    border:1px solid var(--line); border-left:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  canvas{ display:block; background:#0e1320; cursor:crosshair; touch-action:none; }
+  aside#panel{
+    flex:0 0 230px; width:230px; background:var(--panel); border:1px solid var(--line); border-left:none;
+    border-radius:0 12px 12px 0; padding:12px; display:flex; flex-direction:column; gap:10px;
+    height:600px; overflow:hidden;
+  }
+  .ph{ font-size:11px; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; font-weight:700; }
+  /* ---------- Shop ---------- */
+  #shop{ display:flex; flex-direction:column; gap:7px; }
+  .shop{
+    display:grid; grid-template-columns:26px 1fr auto; grid-template-rows:auto auto;
+    gap:1px 8px; align-items:center; text-align:left;
+    background:var(--panel2); border:1px solid var(--line); border-radius:9px;
+    padding:8px 10px; cursor:pointer; color:var(--text); font-family:inherit;
+  }
+  .shop:hover{ border-color:#3a4a75; }
+  .shop.active{ border-color:var(--accent); background:#1a2440; box-shadow:0 0 0 1px var(--accent) inset; }
+  .shop.cant{ opacity:.55; }
+  .shop .chip{ grid-row:1/span 2; width:22px; height:22px; border-radius:6px; background:var(--c); box-shadow:0 0 8px var(--c); }
+  .shop .name{ font-weight:600; font-size:14px; }
+  .shop .name small{ color:var(--dim); font-weight:400; }
+  .shop .desc{ grid-column:2; font-size:11px; color:var(--dim); line-height:1.25; }
+  .shop .cost{ grid-row:1/span 2; color:var(--gold); font-weight:700; font-size:13px; }
+  /* ---------- Info / details ---------- */
+  #info{
+    flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:9px;
+    padding:11px; font-size:13px; overflow:auto; min-height:150px;
+  }
+  #info .tname{ font-weight:700; font-size:15px; margin-bottom:6px; }
+  #info .tname .lv{ color:var(--gold); font-size:12px; font-weight:600; }
+  #info .rows{ margin:6px 0 10px; }
+  #info .rows div{ display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dashed #26314d; color:var(--dim); }
+  #info .rows div b{ color:var(--text); font-weight:600; }
+  #info .btns{ display:flex; flex-direction:column; gap:6px; }
+  #info button{
+    background:#202b45; border:1px solid #33436b; color:var(--text); border-radius:7px;
+    padding:8px; cursor:pointer; font-family:inherit; font-size:13px;
+  }
+  #info button:hover:not(:disabled){ background:#28365a; }
+  #info button:disabled{ opacity:.45; cursor:default; }
+  #info button small{ color:var(--gold); margin-left:4px; }
+  #info button.sell{ border-color:#5a3030; background:#332226; }
+  #info .hint{ color:var(--dim); font-size:11.5px; margin-top:9px; line-height:1.4; }
+  #help{ font-size:11px; color:var(--dim); line-height:1.55; }
+  #help b{ color:var(--text); }
+  /* ---------- Overlay ---------- */
+  #overlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(6,9,15,.86); backdrop-filter:blur(2px); z-index:5;
+  }
+  #overlay.hidden{ display:none; }
+  #ovBox{ text-align:center; padding:30px 44px; border:1px solid var(--line); border-radius:14px; background:rgba(16,22,36,.9); }
+  #ovTitle{ font-size:38px; font-weight:800; letter-spacing:2px; margin-bottom:10px; }
+  #ovTitle.win{ color:#7ee08a; text-shadow:0 0 24px rgba(126,224,138,.5); }
+  #ovTitle.lose{ color:#ff6b5e; text-shadow:0 0 24px rgba(255,90,80,.45); }
+  #ovText{ color:var(--text); font-size:15px; margin-bottom:6px; }
+  #ovSub{ color:var(--dim); font-size:13px; margin-bottom:18px; }
+  #ovBtn{
+    background:linear-gradient(180deg,#2a7d44,#1d5a32); border:1px solid #3fa362; color:#eafff0;
+    font-size:16px; font-weight:700; padding:11px 30px; border-radius:9px; cursor:pointer; letter-spacing:.5px;
+  }
+  #ovBtn:hover{ filter:brightness(1.15); }
+  /* ---------- Responsive: phones & narrow tablets (stacked layout, canvas fits viewport) ---------- */
+  @media (max-width:960px){
+    body{ padding:8px; }
+    header#hud{
+      position:sticky; top:8px; z-index:20;
+      border-bottom:1px solid var(--line); border-radius:12px;
+    }
+    main{ flex-direction:column; align-items:stretch; gap:10px; }
+    #stage{ flex:none; align-self:center; width:auto; border:1px solid var(--line); border-radius:12px; }
+    aside#panel{ flex:none; width:auto; height:auto; border:1px solid var(--line); border-radius:12px; overflow:visible; }
+    #shop{ display:grid; grid-template-columns:1fr 1fr; }
+    #info{ min-height:0; }
+    #ovTitle{ font-size:26px; }
+    #ovBox{ padding:20px 22px; margin:14px; }
+  }
+  @media (max-width:560px){
+    header#hud{ font-size:13px; gap:6px; padding:8px 10px; }
+    .brand{ font-size:13px; margin-right:4px; }
+    .stat{ padding:4px 8px; }
+    .stat b{ font-size:13px; }
+    header button{ padding:7px 9px; font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header id="hud">
+    <div class="brand">🏰 Tower Defense</div>
+    <div class="stat gold">💰<b id="gold">150</b></div>
+    <div class="stat lives" id="livesBox">❤️<b id="lives">20</b></div>
+    <div class="stat wave">🚩<b id="wave">1 / 20</b></div>
+    <div class="stat dim" id="left">Ready</div>
+    <div class="spacer"></div>
+    <button id="send" class="primary">Send Wave 1</button>
+    <button id="speed">1×</button>
+    <button id="pause">Pause</button>
+    <button id="mute" title="Toggle sound (M)">🔊</button>
+  </header>
+  <main>
+    <div id="stage">
+      <canvas id="game" width="960" height="600"></canvas>
+      <div id="overlay">
+        <div id="ovBox">
+          <h1 id="ovTitle">TOWER DEFENSE</h1>
+          <p id="ovText">20 waves of invaders are coming. Build towers on the grass — never on the road.</p>
+          <p id="ovSub">150 gold · 20 lives · 4 tower types · 3 upgrades each · sell for 70%</p>
+          <button id="ovBtn">▶ Start Game</button>
+        </div>
+      </div>
+    </div>
+    <aside id="panel">
+      <div class="ph">Build Towers</div>
+      <div id="shop"></div>
+      <div class="ph">Details</div>
+      <div id="info"></div>
+      <div id="help">
+        <b>1–4</b> pick tower · <b>Esc</b> / <b>right-click</b> cancel<br>
+        Click / <b>tap</b> a tower to inspect / upgrade / sell<br>
+        <b>Space</b> wave · <b>P</b> pause · <b>F</b> speed · <b>U</b> upgrade · <b>X</b> sell<br>
+        <b>Touch:</b> drag to aim placement, release to build · <b>long-press</b> cancels
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

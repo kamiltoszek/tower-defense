@@ -1,0 +1,148 @@
+/* ============================== HUD & panel sync ============================== */
+import { $ } from './util.js';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, WAVES } from './config.js';
+import { state, world } from './state.js';
+import { sfx } from './audio.js';
+import { upCost, sellValue, towerStats, doUpgrade, doSell } from './towers.js';
+import { fitCanvas } from './render.js';
+
+const elGold=$('gold'), elLives=$('lives'), elLivesBox=$('livesBox'),
+      elWave=$('wave'), elLeft=$('left'), sendBtn=$('send'),
+      speedBtn=$('speed'), pauseBtn=$('pause'), muteBtn=$('mute'),
+      shopEl=$('shop'), infoEl=$('info'),
+      overlay=$('overlay'), ovTitle=$('ovTitle'), ovText=$('ovText'),
+      ovSub=$('ovSub'), ovBtn=$('ovBtn');
+
+function setTxt(el,v){ if(el.textContent!==String(v)) el.textContent=v; }
+
+// build shop buttons
+export const shopBtns={};
+for(const type of TOWER_ORDER){
+  const b=TOWERS[type];
+  const btn=document.createElement('button');
+  btn.className='shop'; btn.dataset.type=type;
+  btn.style.setProperty('--c',b.color);
+  btn.innerHTML=
+    `<span class="chip" style="--c:${b.color}"></span>`+
+    `<span class="name">${b.name} <small>${TOWER_ORDER.indexOf(type)+1}</small></span>`+
+    `<span class="cost">${b.cost}g</span>`+
+    `<span class="desc">${b.desc}</span>`;
+  btn.addEventListener('click',()=>{
+    if(state.phase==='over'||state.phase==='win') return;
+    state.placing=state.placing===type?null:type;
+    state.selected=null;
+    sfx(state.placing?'build':'deny');
+    syncHud();
+  });
+  shopEl.appendChild(btn);
+  shopBtns[type]=btn;
+}
+
+let lastInfoKey='';
+function syncInfo(){
+  const sel=state.selected;
+  const key=sel? sel.uid+':'+sel.level+':'+(state.gold>=upCost(sel)) : state.placing||'none';
+  if(key===lastInfoKey) return;
+  lastInfoKey=key;
+  if(sel){
+    const b=TOWERS[sel.type], s=towerStats(sel);
+    const maxed=sel.level>=MAX_LEVEL;
+    const uc=upCost(sel);
+    infoEl.innerHTML=
+      `<div class="tname" style="color:${b.color}">${b.name} <span class="lv">Lv ${sel.level}${maxed?' · MAX':''}</span></div>`+
+      `<div class="rows">`+
+        `<div><span>Damage</span><b>${s.dmg}</b></div>`+
+        `<div><span>Range</span><b>${Math.round(s.range)} px</b></div>`+
+        `<div><span>Fire rate</span><b>${(1/s.rate).toFixed(2)}/s</b></div>`+
+        (s.splash?`<div><span>Splash radius</span><b>${Math.round(s.splash)} px</b></div>`:'')+
+        (s.slow?`<div><span>Slow</span><b>${Math.round((1-s.slow)*100)}% for ${s.slowDur.toFixed(1)}s</b></div>`:'')+
+      `</div>`+
+      `<div class="btns">`+
+        (maxed?`<button data-act="up" disabled>Max level reached</button>`
+              :`<button data-act="up" ${state.gold<uc?'disabled':''}>⬆ Upgrade <small>${uc}g</small></button>`)+
+        `<button data-act="sell" class="sell">Sell <small>+${sellValue(sel)}g</small></button>`+
+      `</div>`+
+      `<p class="hint">Total spent: ${sel.spent}g · sell refunds 70%.`+
+      (maxed?'':' Next upgrade costs '+uc+'g. (U / X)')+`</p>`;
+  }else if(state.placing){
+    const b=TOWERS[state.placing];
+    infoEl.innerHTML=
+      `<div class="tname" style="color:${b.color}">${b.name}</div>`+
+      `<div class="rows">`+
+        `<div><span>Cost</span><b>${b.cost}g</b></div>`+
+        `<div><span>Damage</span><b>${b.dmg}</b></div>`+
+        `<div><span>Range</span><b>${b.range} px</b></div>`+
+        `<div><span>Fire rate</span><b>${(1/b.rate).toFixed(2)}/s</b></div>`+
+      `</div>`+
+      `<p class="hint">${b.desc}<br><br>Click a <b style="color:#8fd18f">non-road cell</b> to place. Right-click or Esc cancels.</p>`;
+  }else{
+    infoEl.innerHTML=
+      `<p class="hint" style="margin:0">Pick a tower above, then click a grid cell to build it.</p>`+
+      `<p class="hint" style="margin:8px 0 0">Click a placed tower to see its stats and upgrade or sell it (70% refund).</p>`+
+      `<p class="hint" style="margin:8px 0 0">Towers cannot be built on the road.</p>`;
+  }
+}
+infoEl.addEventListener('click',e=>{
+  const btn=e.target.closest?e.target.closest('[data-act]'):null;
+  if(!btn||btn.disabled) return;
+  const sel=state.selected;
+  if(!sel) return;
+  if(btn.dataset.act==='up') doUpgrade(sel);
+  else if(btn.dataset.act==='sell') doSell(sel);
+  syncHud();
+});
+
+export function showOverlay(title,cls,text,sub,btnLabel){
+  ovTitle.textContent=title;
+  ovTitle.className=cls||'';
+  ovText.textContent=text;
+  ovSub.textContent=sub||'';
+  ovBtn.textContent=btnLabel;
+  ovBtn.style.display=btnLabel?'':'none';
+  overlay.classList.remove('hidden');
+}
+export function hideOverlay(){ overlay.classList.add('hidden'); }
+
+export function syncHud(){
+  setTxt(elGold,state.gold);
+  setTxt(elLives,state.lives);
+  elLivesBox.classList.toggle('low',state.lives<=5);
+  setTxt(elWave,state.wave+' / '+WAVES.length);
+  setTxt(elLeft, state.phase==='wave'
+    ? 'Enemies left: '+(state.queue.length+world.enemies.length)
+    : state.phase==='build' ? 'Next: wave '+state.wave
+    : state.phase==='start' ? 'Ready' : '');
+  setTxt(sendBtn, state.phase==='build'?('Send Wave '+state.wave):'Wave in progress…');
+  sendBtn.disabled=!(state.phase==='build'&&!state.paused);
+  setTxt(speedBtn,state.speed+'×');
+  speedBtn.classList.toggle('on',state.speed===2);
+  setTxt(pauseBtn,state.paused?'Resume':'Pause');
+  pauseBtn.disabled=!(state.phase==='build'||state.phase==='wave');
+  setTxt(muteBtn,state.muted?'🔇':'🔊');
+  for(const type of TOWER_ORDER){
+    const b=TOWERS[type];
+    shopBtns[type].classList.toggle('active',state.placing===type);
+    shopBtns[type].classList.toggle('cant',state.gold<b.cost);
+  }
+  syncInfo();
+}
+
+/* ---------- orientation: phones must play in landscape ---------- */
+let orientPaused=false, orientWasPaused=false;
+export function checkOrientation(){
+  const phone=Math.min(innerWidth,innerHeight)<500;
+  const portrait=innerHeight>innerWidth;
+  const active=state.phase==='build'||state.phase==='wave';
+  if(phone&&portrait&&active){
+    if(!orientPaused){
+      orientPaused=true; orientWasPaused=state.paused;
+      showOverlay('📱 Rotate Your Phone','','Turn your device to landscape','The game is paused — it will resume automatically','');
+    }
+    state.paused=true;
+  }else if(orientPaused){
+    orientPaused=false;
+    state.paused=orientWasPaused;
+    hideOverlay();
+    fitCanvas();
+  }
+}
