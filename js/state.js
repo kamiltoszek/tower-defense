@@ -17,7 +17,8 @@ export function freshState(){
     placing:null, selected:null,
     speed:1, paused:false, muted:false,
     queue:[], spawnT:0, interval:0.7,
-    time:0, kills:0, multiHits:0, slowHits:0
+    time:0, kills:0, multiHits:0, slowHits:0,
+    shake:0                 // screen-shake magnitude, decays in update
   };
 }
 export let state = freshState();

@@ -14,7 +14,7 @@ export function spawnEnemy(type){
     x:pts[0].x-30, y:pts[0].y, dist:-30,
     hp, maxHp:hp, speed:t.speed*waveSpdMul(w),
     r:t.r, gold:t.gold, lives:t.lives,
-    slow:0, slowAmt:0, face:0, dead:false
+    slow:0, slowAmt:0, face:0, dead:false, flash:0
   });
 }
 export function acquire(tw,s){
@@ -43,10 +43,11 @@ export function fire(tw,target){
 }
 export function hitEnemy(e,dmg){
   if(e.dead) return;
-  e.hp-=dmg;
+  e.hp-=dmg; e.flash=0.08;
   if(e.hp<=0){
     e.dead=true;
     state.gold+=e.gold; state.kills++;
+    state.shake=Math.max(state.shake,e.type==='boss'?0.5:0.12);
     addFloat(e.x,e.y-10,'+'+e.gold,'#f5c542');
     burst(e.x,e.y,ETYPES[e.type].color,e.type==='boss'?26:9);
     sfx(e.type==='boss'?'bossdie':'die');

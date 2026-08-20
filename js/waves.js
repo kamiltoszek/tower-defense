@@ -12,7 +12,7 @@ export function sendWave(){
   state.interval=(state.wave%5===0)?0.85:Math.max(0.35,0.8-state.wave*0.015);
   state.spawnT=0.35;
   world.effects.push({type:'banner', text:'WAVE '+state.wave,
-    sub:def.some(d=>d[0]==='boss')?'⚠ BOSS INCOMING ⚠':'', age:0, life:2.3});
+    sub:def.some(d=>d[0]==='boss')?'BOSS INCOMING':'', age:0, life:2.3});
   sfx('wavestart');
 }
 

@@ -10,6 +10,8 @@ import { doGameOver, doVictory } from './waves.js';
 
 export function update(dt){
   state.time+=dt;
+  if(state.shake>0) state.shake=Math.max(0,state.shake-dt*1.8);
+  if(state.shake<=0) state.shake=0;
 
   // spawning
   if(state.phase==='wave'&&state.queue.length){
@@ -21,13 +23,15 @@ export function update(dt){
   for(const e of world.enemies){
     if(e.dead) continue;
     if(e.slow>0){ e.slow-=dt; if(e.slow<=0) e.slowAmt=0; }
+    if(e.flash>0) e.flash-=dt;
     const mul=e.slow>0?1-e.slowAmt:1;
     e.dist+=e.speed*mul*dt;
     const p=pointAt(e.dist); e.x=p.x; e.y=p.y;
     if(e.dist>=TOTAL_LEN){
       e.dead=true;
       state.lives-=e.lives;
-      addFloat(e.x-24,e.y,'-'+e.lives+' ❤','#ff5252');
+      state.shake=Math.max(state.shake,0.35);
+      addFloat(e.x-24,e.y,'-'+e.lives+(e.lives>1?' lives':' life'),'#ff5252');
       sfx('leak');
       if(state.lives<=0){ state.lives=0; doGameOver(); }
     } else {
@@ -68,6 +72,7 @@ export function update(dt){
           if(Math.hypot(e.x-p.tx,e.y-p.ty)<=p.splash+e.r){ hitEnemy(e,p.dmg); if(!e.dead||true) hits++; }
         }
         if(hits>=2) state.multiHits++;
+        state.shake=Math.max(state.shake,0.18);
         sfx('boom');
       }else if(t&&!t.dead){
         hitEnemy(t,p.dmg);

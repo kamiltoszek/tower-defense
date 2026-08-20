@@ -34,18 +34,37 @@
     background:var(--panel); border:1px solid var(--line); border-bottom:none;
     border-radius:12px 12px 0 0; padding:10px 14px; font-size:15px;
   }
-  .brand{ font-weight:700; letter-spacing:.5px; margin-right:8px; font-size:16px; }
-  .stat{
-    background:var(--panel2); border:1px solid var(--line); border-radius:8px;
-    padding:6px 12px; white-space:nowrap; color:var(--dim);
-  }
-  .stat b{ color:var(--text); font-size:15px; margin-left:2px; }
-  .stat.gold b{ color:var(--gold); }
-  .stat.lives b{ color:#ff8a80; }
-  .stat.lives.low b{ color:var(--danger); animation:blink .7s infinite; }
-  .stat.wave b{ color:var(--accent); }
-  .stat.dim{ color:var(--dim); font-size:13px; }
-  @keyframes blink{ 50%{ opacity:.45; } }
+   .brand{ font-weight:700; letter-spacing:.5px; margin-right:8px; font-size:16px; display:flex; align-items:center; gap:7px; }
+   .brand svg{ width:19px; height:19px; color:#c7d2e8; }
+   .stat{
+     background:linear-gradient(180deg,#1b2337,#151c2e); border:1px solid var(--line); border-radius:8px;
+     padding:6px 12px; white-space:nowrap; color:var(--dim); display:inline-flex; align-items:center;
+   }
+   .stat svg{ width:15px; height:15px; margin-right:6px; flex:none; }
+   .stat b{ color:var(--text); font-size:15px; margin-left:1px; }
+   .stat.gold svg{ color:var(--gold); }
+   .stat.gold b{ color:var(--gold); }
+   .stat.lives svg{ color:#ff8a80; }
+   .stat.lives b{ color:#ff8a80; }
+   .stat.lives.low b{ color:var(--danger); animation:blink .7s infinite; }
+   .stat.lives.low svg{ color:var(--danger); }
+   .stat.wave svg{ color:var(--accent); }
+   .stat.wave b{ color:var(--accent); }
+   .stat.dim{ color:var(--dim); font-size:13px; }
+   @keyframes blink{ 50%{ opacity:.45; } }
+   @keyframes pop{ 0%{ transform:scale(1); } 35%{ transform:scale(1.22); } 100%{ transform:scale(1); } }
+   .stat.bump{ animation:pop .3s ease-out; }
+   @keyframes hurtShake{
+     0%,100%{ transform:translateX(0); }
+     20%{ transform:translateX(-4px); } 40%{ transform:translateX(4px); }
+     60%{ transform:translateX(-3px); } 80%{ transform:translateX(2px); }
+   }
+   .stat.lives.hurt{ animation:hurtShake .45s ease-out, blink .45s 2; }
+   @keyframes waveFlash{
+     0%{ box-shadow:0 0 0 1.5px var(--accent) inset, 0 0 14px rgba(77,163,255,.35); }
+     100%{ box-shadow:none; }
+   }
+   .stat.wave.flash{ animation:waveFlash .6s ease-out; }
   header button{
     background:var(--panel2); color:var(--text); border:1px solid var(--line);
     border-radius:8px; padding:8px 13px; font-size:14px; cursor:pointer;
@@ -54,7 +73,8 @@
   header button:hover:not(:disabled){ background:#202b45; }
   header button:active:not(:disabled){ transform:translateY(1px); }
   header button:disabled{ opacity:.45; cursor:default; }
-  header button.primary{ background:#1c4d2c; border-color:#2e7c43; color:#c8f5cf; font-weight:600; }
+   header button svg{ width:16px; height:16px; display:block; }
+   header button.primary{ background:#1c4d2c; border-color:#2e7c43; color:#c8f5cf; font-weight:600; }
   header button.primary:hover:not(:disabled){ background:#226036; }
   header button.on{ background:#274b7a; border-color:#3f6fae; color:#cfe6ff; }
   .spacer{ flex:1; }
@@ -84,9 +104,13 @@
   .shop.active{ border-color:var(--accent); background:#1a2440; box-shadow:0 0 0 1px var(--accent) inset; }
   .shop.cant{ opacity:.55; }
   .shop .chip{ grid-row:1/span 2; width:22px; height:22px; border-radius:6px; background:var(--c); box-shadow:0 0 8px var(--c); }
-  .shop .name{ font-weight:600; font-size:14px; }
-  .shop .name small{ color:var(--dim); font-weight:400; }
-  .shop .desc{ grid-column:2; font-size:11px; color:var(--dim); line-height:1.25; }
+   .shop .name{ font-weight:600; font-size:14px; }
+   .shop .key{
+     margin-left:7px; font-size:10px; font-weight:700; line-height:1; padding:2.5px 5px;
+     border-radius:4px; background:#0d1322; border:1px solid #2b3a5c; color:var(--dim);
+   }
+   .shop.active .key{ border-color:var(--accent); color:var(--accent); }
+    .shop .desc{ grid-column:2/-1; font-size:11px; color:var(--dim); line-height:1.25; }
   .shop .cost{ grid-row:1/span 2; color:var(--gold); font-weight:700; font-size:13px; }
   /* ---------- Info / details ---------- */
   #info{
@@ -108,20 +132,36 @@
   #info button small{ color:var(--gold); margin-left:4px; }
   #info button.sell{ border-color:#5a3030; background:#332226; }
   #info .hint{ color:var(--dim); font-size:11.5px; margin-top:9px; line-height:1.4; }
-  #help{ font-size:11px; color:var(--dim); line-height:1.55; }
-  #help b{ color:var(--text); }
   /* ---------- Overlay ---------- */
   #overlay{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     background:rgba(6,9,15,.86); backdrop-filter:blur(2px); z-index:5;
   }
   #overlay.hidden{ display:none; }
-  #ovBox{ text-align:center; padding:30px 44px; border:1px solid var(--line); border-radius:14px; background:rgba(16,22,36,.9); }
-  #ovTitle{ font-size:38px; font-weight:800; letter-spacing:2px; margin-bottom:10px; }
-  #ovTitle.win{ color:#7ee08a; text-shadow:0 0 24px rgba(126,224,138,.5); }
-  #ovTitle.lose{ color:#ff6b5e; text-shadow:0 0 24px rgba(255,90,80,.45); }
-  #ovText{ color:var(--text); font-size:15px; margin-bottom:6px; }
-  #ovSub{ color:var(--dim); font-size:13px; margin-bottom:18px; }
+   #ovBox{
+     text-align:center; padding:32px 46px 34px; border:1px solid #33405e; border-radius:16px;
+     background:linear-gradient(180deg, rgba(20,27,45,.96), rgba(10,14,25,.97));
+     box-shadow:0 26px 70px rgba(0,0,0,.55);
+   }
+   #ovTitle{ font-size:38px; font-weight:800; letter-spacing:3px; margin-bottom:0; }
+   #ovTitle.win{ color:#7ee08a; text-shadow:0 0 24px rgba(126,224,138,.5); }
+   #ovTitle.lose{ color:#ff6b5e; text-shadow:0 0 24px rgba(255,90,80,.45); }
+   .title-rule{ width:64px; height:3px; border-radius:2px; margin:12px auto 14px;
+     background:linear-gradient(90deg, transparent, var(--gold), transparent); }
+   #ovText{ color:var(--text); font-size:15px; margin-bottom:0; max-width:44ch; margin-left:auto; margin-right:auto; }
+   #ovExtra{ margin:16px 0 0; display:grid; grid-template-columns:repeat(2,minmax(160px,1fr)); gap:7px; text-align:left; }
+   #ovExtra.hidden{ display:none; }
+   #ovExtra .trow{
+     display:flex; align-items:center; gap:9px; padding:7px 10px;
+     background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:9px; font-size:13px;
+   }
+   #ovExtra .trow .chip{ width:13px; height:13px; border-radius:4px; background:var(--c); box-shadow:0 0 8px var(--c); flex:none; }
+   #ovExtra .trow .key{
+     font-size:9px; font-weight:700; line-height:1; padding:2px 4.5px;
+     border-radius:4px; background:#0d1322; border:1px solid #2b3a5c; color:var(--dim); flex:none;
+   }
+   #ovExtra .trow small{ color:var(--dim); margin-left:auto; font-size:11px; font-weight:600; }
+   #ovSub{ color:var(--dim); font-size:13px; margin:14px 0 18px; }
   #ovBtn{
     background:linear-gradient(180deg,#2a7d44,#1d5a32); border:1px solid #3fa362; color:#eafff0;
     font-size:16px; font-weight:700; padding:11px 30px; border-radius:9px; cursor:pointer; letter-spacing:.5px;
@@ -154,16 +194,30 @@
 <body>
 <div id="wrap">
   <header id="hud">
-    <div class="brand">🏰 Tower Defense</div>
-    <div class="stat gold">💰<b id="gold">150</b></div>
-    <div class="stat lives" id="livesBox">❤️<b id="lives">20</b></div>
-    <div class="stat wave">🚩<b id="wave">1 / 20</b></div>
+    <div class="brand">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 7.2l3.5 2.5L10 4.2l3.5 5.5L17 7.2l-1.4 7.3H4.4z"/></svg>
+      Tower Defense
+    </div>
+    <div class="stat gold" id="goldBox">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3" fill="currentColor" stroke="none"/></svg>
+      <b id="gold">150</b>
+    </div>
+    <div class="stat lives" id="livesBox">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 17.2C4.8 13.9 2.5 11.4 2.5 8.6c0-2.2 1.7-3.8 3.8-3.8 1.5 0 2.9.8 3.7 2.1.8-1.3 2.2-2.1 3.7-2.1 2.1 0 3.8 1.6 3.8 3.8 0 2.8-2.3 5.3-7.5 8.6z"/></svg>
+      <b id="lives">20</b>
+    </div>
+    <div class="stat wave" id="waveBox">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5 2h1.6v16H5zM6.6 3h9.2l-2.4 3.4 2.4 3.4H6.6z"/></svg>
+      <b id="wave">1 / 20</b>
+    </div>
     <div class="stat dim" id="left">Ready</div>
     <div class="spacer"></div>
     <button id="send" class="primary">Send Wave 1</button>
     <button id="speed">1×</button>
     <button id="pause">Pause</button>
-    <button id="mute" title="Toggle sound (M)">🔊</button>
+    <button id="mute" title="Toggle sound (M)" aria-label="Toggle sound">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 8v4h3l4.5 4V4L6 8H3z"/><path d="M13.5 7.3a4.2 4.2 0 0 1 0 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
   </header>
   <main>
     <div id="stage">
@@ -171,9 +225,11 @@
       <div id="overlay">
         <div id="ovBox">
           <h1 id="ovTitle">TOWER DEFENSE</h1>
-          <p id="ovText">20 waves of invaders are coming. Build towers on the grass — never on the road.</p>
-          <p id="ovSub">150 gold · 20 lives · 4 tower types · 3 upgrades each · sell for 70%</p>
-          <button id="ovBtn">▶ Start Game</button>
+          <div class="title-rule"></div>
+          <p id="ovText">20 waves of invaders are coming. Build towers on the grass, never on the road.</p>
+          <div id="ovExtra"></div>
+          <p id="ovSub">150 gold · 20 lives · 3 upgrades each · sell refunds 70%</p>
+          <button id="ovBtn">Start Game</button>
         </div>
       </div>
     </div>
@@ -182,12 +238,6 @@
       <div id="shop"></div>
       <div class="ph">Details</div>
       <div id="info"></div>
-      <div id="help">
-        <b>1–4</b> pick tower · <b>Esc</b> / <b>right-click</b> cancel<br>
-        Click / <b>tap</b> a tower to inspect / upgrade / sell<br>
-        <b>Space</b> wave · <b>P</b> pause · <b>F</b> speed · <b>U</b> upgrade · <b>X</b> sell<br>
-        <b>Touch:</b> drag to aim placement, release to build · <b>long-press</b> cancels
-      </div>
     </aside>
   </main>
 </div>

@@ -6,14 +6,18 @@ import { sfx } from './audio.js';
 import { upCost, sellValue, towerStats, doUpgrade, doSell } from './towers.js';
 import { fitCanvas } from './render.js';
 
-const elGold=$('gold'), elLives=$('lives'), elLivesBox=$('livesBox'),
-      elWave=$('wave'), elLeft=$('left'), sendBtn=$('send'),
+const elGold=$('gold'), elGoldBox=$('goldBox'), elLives=$('lives'), elLivesBox=$('livesBox'),
+      elWave=$('wave'), elWaveBox=$('waveBox'), elLeft=$('left'), sendBtn=$('send'),
       speedBtn=$('speed'), pauseBtn=$('pause'), muteBtn=$('mute'),
       shopEl=$('shop'), infoEl=$('info'),
       overlay=$('overlay'), ovTitle=$('ovTitle'), ovText=$('ovText'),
-      ovSub=$('ovSub'), ovBtn=$('ovBtn');
+      ovExtra=$('ovExtra'), ovSub=$('ovSub'), ovBtn=$('ovBtn');
+
+const ICON_VOL='<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 8v4h3l4.5 4V4L6 8H3z"/><path d="M13.5 7.3a4.2 4.2 0 0 1 0 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const ICON_MUTE='<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 8v4h3l4.5 4V4L6 8H3z"/><path d="M13 8l4.4 4.4M17.4 8L13 12.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
 function setTxt(el,v){ if(el.textContent!==String(v)) el.textContent=v; }
+function pulse(el,cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 
 // build shop buttons
 export const shopBtns={};
@@ -22,9 +26,10 @@ for(const type of TOWER_ORDER){
   const btn=document.createElement('button');
   btn.className='shop'; btn.dataset.type=type;
   btn.style.setProperty('--c',b.color);
+  const idx=TOWER_ORDER.indexOf(type)+1;
   btn.innerHTML=
     `<span class="chip" style="--c:${b.color}"></span>`+
-    `<span class="name">${b.name} <small>${TOWER_ORDER.indexOf(type)+1}</small></span>`+
+    `<span class="name">${b.name}<span class="key">${idx}</span></span>`+
     `<span class="cost">${b.cost}g</span>`+
     `<span class="desc">${b.desc}</span>`;
   btn.addEventListener('click',()=>{
@@ -59,7 +64,7 @@ function syncInfo(){
       `</div>`+
       `<div class="btns">`+
         (maxed?`<button data-act="up" disabled>Max level reached</button>`
-              :`<button data-act="up" ${state.gold<uc?'disabled':''}>⬆ Upgrade <small>${uc}g</small></button>`)+
+              :`<button data-act="up" ${state.gold<uc?'disabled':''}>Upgrade <small>${uc}g</small></button>`)+
         `<button data-act="sell" class="sell">Sell <small>+${sellValue(sel)}g</small></button>`+
       `</div>`+
       `<p class="hint">Total spent: ${sel.spent}g · sell refunds 70%.`+
@@ -92,10 +97,20 @@ infoEl.addEventListener('click',e=>{
   syncHud();
 });
 
+// start-screen tower preview (only shown on the start screen)
+ovExtra.innerHTML=TOWER_ORDER.map((t,i)=>{
+  const b=TOWERS[t];
+  return `<div class="trow" style="--c:${b.color}">
+    <span class="chip"></span><span class="key">${i+1}</span>
+    <b>${b.name}</b><small>${b.cost}g</small>
+  </div>`;
+}).join('');
+
 export function showOverlay(title,cls,text,sub,btnLabel){
   ovTitle.textContent=title;
   ovTitle.className=cls||'';
   ovText.textContent=text;
+  ovExtra.classList.toggle('hidden',title!=='TOWER DEFENSE');
   ovSub.textContent=sub||'';
   ovBtn.textContent=btnLabel;
   ovBtn.style.display=btnLabel?'':'none';
@@ -103,7 +118,11 @@ export function showOverlay(title,cls,text,sub,btnLabel){
 }
 export function hideOverlay(){ overlay.classList.add('hidden'); }
 
+let prevGold=null, prevLives=null, prevWave=null;
 export function syncHud(){
+  if(prevGold!==state.gold){ if(prevGold!==null) pulse(elGoldBox,'bump'); prevGold=state.gold; }
+  if(prevLives!==state.lives){ if(prevLives!==null&&prevLives>state.lives) pulse(elLivesBox,'hurt'); prevLives=state.lives; }
+  if(prevWave!==state.wave){ if(prevWave!==null) pulse(elWaveBox,'flash'); prevWave=state.wave; }
   setTxt(elGold,state.gold);
   setTxt(elLives,state.lives);
   elLivesBox.classList.toggle('low',state.lives<=5);
@@ -118,7 +137,8 @@ export function syncHud(){
   speedBtn.classList.toggle('on',state.speed===2);
   setTxt(pauseBtn,state.paused?'Resume':'Pause');
   pauseBtn.disabled=!(state.phase==='build'||state.phase==='wave');
-  setTxt(muteBtn,state.muted?'🔇':'🔊');
+  const muteIcon=state.muted?ICON_MUTE:ICON_VOL;
+  if(muteBtn.innerHTML!==muteIcon) muteBtn.innerHTML=muteIcon;
   for(const type of TOWER_ORDER){
     const b=TOWERS[type];
     shopBtns[type].classList.toggle('active',state.placing===type);
@@ -136,7 +156,7 @@ export function checkOrientation(){
   if(phone&&portrait&&active){
     if(!orientPaused){
       orientPaused=true; orientWasPaused=state.paused;
-      showOverlay('📱 Rotate Your Phone','','Turn your device to landscape','The game is paused — it will resume automatically','');
+      showOverlay('Rotate your phone','','Turn your device to landscape','The game is paused. It will resume automatically','');
     }
     state.paused=true;
   }else if(orientPaused){
