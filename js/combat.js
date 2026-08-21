@@ -1,18 +1,18 @@
 /* ============================== combat ============================== */
 import { pts } from './board.js';
-import { ETYPES, TOWERS, waveHpMul, waveSpdMul, bossHp } from './config.js';
+import { ETYPES, TOWERS, waveHpMul, waveSpdMul, bossHp, DIFFS } from './config.js';
 import { state, world } from './state.js';
 import { sfx } from './audio.js';
 import { addFloat, burst } from './fx.js';
 import { towerStats } from './towers.js';
 
 export function spawnEnemy(type){
-  const t=ETYPES[type], w=state.wave;
-  const hp = type==='boss' ? bossHp(w) : t.hp*waveHpMul(w);
+  const t=ETYPES[type], w=state.wave, D=DIFFS[state.difficulty];
+  const hp = (type==='boss' ? bossHp(w) : t.hp*waveHpMul(w))*D.hp;
   world.enemies.push({
     uid:++world.uid, type,
     x:pts[0].x-30, y:pts[0].y, dist:-30,
-    hp, maxHp:hp, speed:t.speed*waveSpdMul(w),
+    hp, maxHp:hp, speed:t.speed*waveSpdMul(w)*D.spd,
     r:t.r, gold:t.gold, lives:t.lives,
     slow:0, slowAmt:0, face:0, dead:false, flash:0
   });

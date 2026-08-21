@@ -16,10 +16,20 @@ Ręcznie: `python3 -m http.server 8000` → http://localhost:8000
 
 ## Rozgrywka
 
-- 20 fal wrogów, **boss co 5. falę**
-- 150 złota na start, 20 życia
+- Fale wrogów, **boss co 5. falę**
 - Wieże stawiasz na trawie — nigdy na drodze
 - Po każdej fali bonus złota; sprzedaż wieży zwraca 70% inwestycji
+- Przed startem wybierasz poziom trudności
+
+### Poziomy trudności
+
+| Tryb | Fale | Życia | HP wrogów | Bonus złota | Uwagi |
+|------|------|-------|-----------|-------------|-------|
+| Easy | 20 | 20 | ×1.00 | ×1.00 | wygodny — wystarczy dobrze ułożyć wieże |
+| Normal | 25 | 15 | ×1.15 | ×0.95 | wymaga mocniejszego startu i kilku ulepszeń |
+| Hard | 30 | 12 | ×1.30 | ×0.88 | wymaga ulepszeń i przemyślanego rozstawu |
+
+Wszystkie tryby startują od **150 złota** (3 archery). Trudność rośnie głównie przez liczbę fal — późniejsze fale mają znacznie wyższe HP i bossy — oraz przez mniej żyć i niższy dochód. HP wrogów w danej fali to `podstawa × krzywa fali × mnożnik trybu`.
 
 ### Wieże
 

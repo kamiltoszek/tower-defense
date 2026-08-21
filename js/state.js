@@ -4,6 +4,8 @@
  * reassign them (e.g. after a .filter() pass in update). `state` is the
  * game status object, mutated in place everywhere.
  */
+import { DIFFS } from './config.js';
+
 export const world = {
   uid:0,
   towers:[], enemies:[], projs:[], effects:[], particles:[], floats:[],
@@ -12,8 +14,8 @@ export const world = {
 
 export function freshState(){
   return {
-    phase:'start',            // start | build | wave | over | win
-    gold:150, lives:20, wave:1,
+    phase:'start',   // start | build | wave | over | win
+    gold:150, lives:20, wave:1, difficulty:'easy',
     placing:null, selected:null,
     speed:1, paused:false, muted:false,
     queue:[], spawnT:0, interval:0.7,
@@ -24,7 +26,12 @@ export function freshState(){
 export let state = freshState();
 
 export function resetWorld(){
+  const diff=state.difficulty;
   state=freshState();
+  state.difficulty=diff;
+  const D=DIFFS[diff];
+  state.gold=D.gold;
+  state.lives=D.lives;
   world.towers=[]; world.enemies=[]; world.projs=[];
   world.effects=[]; world.particles=[]; world.floats=[];
   world.towerCell=new Map();

@@ -113,7 +113,10 @@ $('ovBtn').addEventListener('click',()=>{
 
 document.addEventListener('keydown',ev=>{
   if(ev.key==='m'||ev.key==='M'){ state.muted=!state.muted; syncHud(); return; }
-  if(state.phase==='start'){ if(ev.key==='Enter'||ev.key===' '){ $('ovBtn').click(); } return; }
+  if(state.phase==='start'){
+    if(ev.key==='1'||ev.key==='2'||ev.key==='3'){ $('ovDiff').children[+ev.key-1].click(); return; }
+    if(ev.key==='Enter'||ev.key===' '){ $('ovBtn').click(); } return;
+  }
   if(state.phase==='over'||state.phase==='win'){ if(ev.key==='Enter') $('ovBtn').click(); return; }
   switch(ev.key){
     case ' ': ev.preventDefault(); sendWave(); break;

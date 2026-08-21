@@ -1,6 +1,6 @@
 /* ============================== HUD & panel sync ============================== */
 import { $ } from './util.js';
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, WAVES } from './config.js';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, DIFFS, DIFF_ORDER } from './config.js';
 import { state, world } from './state.js';
 import { sfx } from './audio.js';
 import { upCost, sellValue, towerStats, doUpgrade, doSell } from './towers.js';
@@ -18,6 +18,32 @@ const ICON_MUTE='<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
 
 function setTxt(el,v){ if(el.textContent!==String(v)) el.textContent=v; }
 function pulse(el,cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+// difficulty selector on the start screen
+const elDiff=$('ovDiff');
+for(const d of DIFF_ORDER){
+  const b=document.createElement('button');
+  b.className='diff-btn';
+  b.dataset.diff=d;
+  b.innerHTML=`<b>${DIFFS[d].name}</b>`+
+    `<small>${DIFFS[d].waves} waves · ${DIFFS[d].lives} lives</small>`;
+  b.addEventListener('click',()=>{
+    if(state.phase!=='start') return;
+    state.difficulty=d;
+    elDiff.querySelectorAll('.diff-btn').forEach(x=>
+      x.classList.toggle('sel',x.dataset.diff===d));
+    syncDiffSub();
+    sfx('build');
+  });
+  elDiff.appendChild(b);
+}
+export function syncDiffSub(){
+  const D=DIFFS[state.difficulty];
+  ovSub.textContent=D.gold+' gold · '+D.lives+' lives · '+D.waves+
+    ' waves · sell refunds 70%';
+}
+syncDiffSub();
+elDiff.querySelector('[data-diff="'+state.difficulty+'"]').classList.add('sel');
 
 // build shop buttons
 export const shopBtns={};
@@ -126,7 +152,7 @@ export function syncHud(){
   setTxt(elGold,state.gold);
   setTxt(elLives,state.lives);
   elLivesBox.classList.toggle('low',state.lives<=5);
-  setTxt(elWave,state.wave+' / '+WAVES.length);
+  setTxt(elWave,state.wave+' / '+DIFFS[state.difficulty].waves);
   setTxt(elLeft, state.phase==='wave'
     ? 'Enemies left: '+(state.queue.length+world.enemies.length)
     : state.phase==='build' ? 'Next: wave '+state.wave

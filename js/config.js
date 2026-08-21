@@ -15,7 +15,18 @@ export const ETYPES={
   boss:   {name:'BOSS',    hp:1400, speed:40,  r:20, gold:150, lives:5, color:'#ff7043'}
 };
 
-// 20 waves; a boss appears on every 5th wave
+// Difficulty: enemy HP/speed scaling, starting gold/lives, wave-bonus
+// multiplier and total number of waves for each mode.
+export const DIFFS={
+  easy:  {name:'Easy',   hp:1,    spd:1,    lives:20, gold:150, bonus:1,    waves:20},
+  normal:{name:'Normal', hp:1.15, spd:1.05, lives:15, gold:150, bonus:0.95, waves:25},
+  hard:  {name:'Hard',   hp:1.3,  spd:1.12, lives:12, gold:150, bonus:0.88, waves:30}
+};
+export const DIFF_ORDER=['easy','normal','hard'];
+export function waveBonus(w,diff){ return Math.round((20+8*w)*DIFFS[diff].bonus); }
+
+// 30 waves; a boss appears on every 5th wave.
+// Easy ends after wave 20, Normal after wave 25, Hard after wave 30.
 export const WAVES=[
   [['soldier',8]],
   [['soldier',10],['runner',4]],
@@ -36,7 +47,17 @@ export const WAVES=[
   [['soldier',20],['runner',16],['tank',8]],
   [['tank',14],['runner',20],['soldier',16]],
   [['tank',16],['runner',20],['soldier',16]],
-  [['tank',12],['runner',20],['soldier',14],['boss',1]]
+  [['tank',12],['runner',20],['soldier',14],['boss',1]],
+  [['soldier',16],['runner',14],['tank',6]],
+  [['tank',12],['runner',16],['soldier',10]],
+  [['soldier',22],['runner',14]],
+  [['tank',14],['runner',20],['soldier',12]],
+  [['tank',10],['soldier',16],['runner',12],['boss',1]],
+  [['tank',16],['runner',22],['soldier',14]],
+  [['soldier',24],['runner',20],['tank',10]],
+  [['tank',18],['runner',24],['soldier',20]],
+  [['tank',20],['runner',24],['soldier',20]],
+  [['tank',16],['runner',24],['soldier',18],['boss',1]]
 ];
 
 export function waveHpMul(w){ return 1 + 0.08*(w-1) + 0.005*(w-1)*(w-1); }

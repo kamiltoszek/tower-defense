@@ -1,6 +1,6 @@
 /* ============================== update (simulation step) ============================== */
 import { W, TOTAL_LEN, pointAt } from './board.js';
-import { WAVES } from './config.js';
+import { DIFFS, waveBonus } from './config.js';
 import { state, world } from './state.js';
 import { sfx } from './audio.js';
 import { addFloat } from './fx.js';
@@ -101,11 +101,11 @@ export function update(dt){
 
   // wave complete?
   if(state.phase==='wave'&&state.queue.length===0&&world.enemies.length===0){
-    const bonus=20+8*state.wave;
+    const bonus=waveBonus(state.wave,state.difficulty);
     state.gold+=bonus;
     addFloat(W/2,110,'Wave bonus +'+bonus+'g','#f5c542');
     sfx('waveclear');
-    if(state.wave>=WAVES.length){ doVictory(); }
+    if(state.wave>=DIFFS[state.difficulty].waves){ doVictory(); }
     else{ state.wave++; state.phase='build'; }
   }
 }

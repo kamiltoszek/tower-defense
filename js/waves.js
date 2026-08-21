@@ -1,5 +1,5 @@
 /* ============================== waves & game flow ============================== */
-import { WAVES, buildQueue } from './config.js';
+import { WAVES, buildQueue, DIFFS } from './config.js';
 import { state, world } from './state.js';
 import { sfx } from './audio.js';
 import { showOverlay } from './dom.js';
@@ -20,11 +20,11 @@ export function doGameOver(){
   state.phase='over';
   sfx('lose');
   showOverlay('GAME OVER','lose','The defenses fell on wave '+state.wave+'.',
-    'Waves cleared: '+(state.wave-1)+'  ·  Kills: '+state.kills,'Play Again');
+    DIFFS[state.difficulty].name+'  ·  Waves cleared: '+(state.wave-1)+'  ·  Kills: '+state.kills,'Play Again');
 }
 export function doVictory(){
   state.phase='win';
   sfx('win');
-  showOverlay('VICTORY!','win','All 20 waves cleared — the kingdom is safe.',
-    'Kills: '+state.kills+'  ·  Lives left: '+state.lives+'  ·  Gold: '+state.gold,'Play Again');
+  showOverlay('VICTORY!','win','All '+DIFFS[state.difficulty].waves+' waves cleared — the kingdom is safe.',
+    DIFFS[state.difficulty].name+'  ·  Kills: '+state.kills+'  ·  Lives left: '+state.lives+'  ·  Gold: '+state.gold,'Play Again');
 }
