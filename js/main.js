@@ -7,6 +7,7 @@ import { draw, fitCanvas } from './render.js';
 import { syncHud, checkOrientation } from './dom.js';
 import { sendWave } from './waves.js';
 import { doUpgrade, doSell, placeTower, towerStats } from './towers.js';
+import { generateMaps, select as selectMap, currentMap } from './mapsel.js';
 import './input.js';
 
 addEventListener('resize',fitCanvas);
@@ -19,8 +20,10 @@ window.TD_DEBUG={
   get towers(){ return world.towers; },
   get enemies(){ return world.enemies; },
   get projs(){ return world.projs; },
+  get map(){ return currentMap(); },
   sendWave, doUpgrade, doSell, placeTower,
-  stats: towerStats
+  stats: towerStats,
+  selectMap, regenerateMaps: generateMaps
 };
 
 /* ============================== main loop ============================== */
@@ -37,6 +40,7 @@ function frame(now){
   syncHud();
   checkOrientation();
 }
+generateMaps();
 fitCanvas();
 syncHud();
 requestAnimationFrame(frame);

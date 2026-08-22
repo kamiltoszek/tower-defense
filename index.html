@@ -135,14 +135,14 @@
   /* ---------- Overlay ---------- */
   #overlay{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    background:rgba(6,9,15,.86); backdrop-filter:blur(2px); z-index:5;
+    background:rgba(6,9,15,.86); backdrop-filter:blur(2px); z-index:5; overflow-y:auto;
   }
   #overlay.hidden{ display:none; }
-   #ovBox{
-     text-align:center; padding:32px 46px 34px; border:1px solid #33405e; border-radius:16px;
-     background:linear-gradient(180deg, rgba(20,27,45,.96), rgba(10,14,25,.97));
-     box-shadow:0 26px 70px rgba(0,0,0,.55);
-   }
+    #ovBox{
+      text-align:center; padding:32px 46px 34px; border:1px solid #33405e; border-radius:16px;
+      background:linear-gradient(180deg, rgba(20,27,45,.96), rgba(10,14,25,.97));
+      box-shadow:0 26px 70px rgba(0,0,0,.55); margin:auto;
+    }
    #ovTitle{ font-size:38px; font-weight:800; letter-spacing:3px; margin-bottom:0; }
    #ovTitle.win{ color:#7ee08a; text-shadow:0 0 24px rgba(126,224,138,.5); }
    #ovTitle.lose{ color:#ff6b5e; text-shadow:0 0 24px rgba(255,90,80,.45); }
@@ -164,7 +164,22 @@
       border-color:var(--gold); background:#1b2334;
       box-shadow:0 0 14px rgba(245,197,66,.18);
     }
-   #ovExtra{ margin:16px 0 0; display:grid; grid-template-columns:repeat(2,minmax(160px,1fr)); gap:7px; text-align:left; }
+    #ovMaps{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:16px 0 4px; }
+    .map-btn{
+      display:flex; flex-direction:column; align-items:center; gap:5px;
+      padding:6px; background:#141c2c; border:1px solid var(--line); border-radius:10px;
+      cursor:pointer; font-family:inherit;
+      transition:border-color .15s, box-shadow .15s, background .15s;
+    }
+    .map-btn canvas{ display:block; width:144px; height:90px; border-radius:6px; background:#0e1320; }
+    .map-btn .cap{ font-size:11px; color:var(--dim); font-weight:600; }
+    .map-btn:hover{ border-color:#54688c; }
+    .map-btn.sel{
+      border-color:var(--gold); background:#1b2334;
+      box-shadow:0 0 14px rgba(245,197,66,.18);
+    }
+    .map-btn.sel .cap{ color:var(--gold); }
+    #ovExtra{ margin:16px 0 0; display:grid; grid-template-columns:repeat(2,minmax(160px,1fr)); gap:7px; text-align:left; }
    #ovExtra.hidden{ display:none; }
    #ovExtra .trow{
      display:flex; align-items:center; gap:9px; padding:7px 10px;
@@ -195,7 +210,10 @@
     #shop{ display:grid; grid-template-columns:1fr 1fr; }
     #info{ min-height:0; }
     #ovTitle{ font-size:26px; }
-    #ovBox{ padding:20px 22px; margin:14px; }
+    #ovBox{ padding:20px 22px; }
+    #ovMaps{ gap:7px; }
+    .map-btn canvas{ width:112px; height:70px; }
+    .map-btn .cap{ font-size:10px; }
   }
   @media (max-width:560px){
     header#hud{ font-size:13px; gap:6px; padding:8px 10px; }
@@ -241,8 +259,9 @@
         <div id="ovBox">
           <h1 id="ovTitle">TOWER DEFENSE</h1>
           <div class="title-rule"></div>
-          <p id="ovText">Waves of invaders are coming. Choose your difficulty, then build towers on the grass — never on the road.</p>
+          <p id="ovText">Waves of invaders are coming. Pick a map and difficulty, then build towers on the grass — never on the road. (←/→ switch map)</p>
           <div id="ovDiff"></div>
+          <div id="ovMaps"></div>
           <div id="ovExtra"></div>
           <p id="ovSub">150 gold · 20 lives · 20 waves · sell refunds 70%</p>
           <button id="ovBtn">Start Game</button>

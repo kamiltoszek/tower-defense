@@ -3,25 +3,36 @@ import { clamp } from './util.js';
 
 export const CELL=40, COLS=24, ROWS=15, W=960, H=600;
 
-// Winding path: left edge -> right edge (grid waypoints)
-const WAYPOINTS=[[0,2],[20,2],[20,6],[3,6],[3,10],[23,10]];
-export const pathSet=new Set();
-export const pts=[];               // ordered cell centers, 40px apart
-for(let i=0;i<WAYPOINTS.length-1;i++){
-  const [c0,r0]=WAYPOINTS[i], [c1,r1]=WAYPOINTS[i+1];
-  const dc=Math.sign(c1-c0), dr=Math.sign(r1-r0);
-  let c=c0, r=r0;
-  for(;;){
-    if(!(c===c0&&r===r0&&i>0)){
-      pathSet.add(c+','+r);
-      pts.push({x:c*CELL+CELL/2, y:r*CELL+CELL/2});
+export let pathSet=new Set();   // "c,r" cells on the road
+export let pts=[];              // ordered cell centers, 40px apart
+export let TOTAL_LEN=0;         // (pts.length-1)*CELL
+export let pathDirs=[];
+
+/* Rebuild the path from axis-aligned waypoints (left edge -> right edge).
+ * pathSet/pts/TOTAL_LEN/pathDirs are live bindings — consumers always see
+ * the latest values. */
+export function setWaypoints(wp){
+  pathSet=new Set();
+  pts=[];
+  for(let i=0;i<wp.length-1;i++){
+    const [c0,r0]=wp[i], [c1,r1]=wp[i+1];
+    const dc=Math.sign(c1-c0), dr=Math.sign(r1-r0);
+    let c=c0, r=r0;
+    for(;;){
+      if(!(c===c0&&r===r0&&i>0)){
+        pathSet.add(c+','+r);
+        pts.push({x:c*CELL+CELL/2, y:r*CELL+CELL/2});
+      }
+      if(c===c1&&r===r1) break;
+      c+=dc; r+=dr;
     }
-    if(c===c1&&r===r1) break;
-    c+=dc; r+=dr;
   }
+  TOTAL_LEN=(pts.length-1)*CELL;
+  pathDirs=pts.map((p,i)=> i<pts.length-1 ? Math.atan2(pts[i+1].y-p.y, pts[i+1].x-p.x) : 0);
 }
-export const TOTAL_LEN=(pts.length-1)*CELL;   // 2600 px
-export const pathDirs=pts.map((p,i)=> i<pts.length-1 ? Math.atan2(pts[i+1].y-p.y, pts[i+1].x-p.x) : 0);
+
+export const CLASSIC_WAYPOINTS=[[0,2],[20,2],[20,6],[3,6],[3,10],[23,10]];
+setWaypoints(CLASSIC_WAYPOINTS);
 
 export function pointAt(d){
   if(d<0) return {x:pts[0].x+d, y:pts[0].y};

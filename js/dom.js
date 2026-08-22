@@ -143,6 +143,16 @@ export function showOverlay(title,cls,text,sub,btnLabel){
   overlay.classList.remove('hidden');
 }
 export function hideOverlay(){ overlay.classList.add('hidden'); }
+export function showStartScreen(){
+  ovTitle.textContent='TOWER DEFENSE';
+  ovTitle.className='';
+  ovText.textContent='Waves of invaders are coming. Pick a map and difficulty, then build towers on the grass — never on the road.';
+  ovExtra.classList.remove('hidden');
+  syncDiffSub();
+  ovBtn.textContent='Start Game';
+  ovBtn.style.display='';
+  overlay.classList.remove('hidden');
+}
 
 let prevGold=null, prevLives=null, prevWave=null;
 export function syncHud(){

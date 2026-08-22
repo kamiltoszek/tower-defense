@@ -19,7 +19,8 @@ Ręcznie: `python3 -m http.server 8000` → http://localhost:8000
 - Fale wrogów, **boss co 5. falę**
 - Wieże stawiasz na trawie — nigdy na drodze
 - Po każdej fali bonus złota; sprzedaż wieży zwraca 70% inwestycji
-- Przed startem wybierasz poziom trudności
+- Przed startem wybierasz **jedną z 5 losowych map** (miniaturki na ekranie startowym) i poziom trudności
+- Im krótsza droga, tym szybciej przechodzą wrogowie — mapy różnią się długością (24–96 pól)
 
 ### Poziomy trudności
 
@@ -57,6 +58,7 @@ HP wrogów rośnie z falą (`1 + 0.08·(w−1) + 0.005·(w−1)²`), bossy jeszc
 
 | Akcja | Klawisz / gest |
 |-------|----------------|
+| Wybór mapy (start) | klik miniaturkę lub `←`/`→` |
 | Wybór wieży | `1`–`4` lub klik w shop |
 | Anulowanie | `Esc` / prawy klik / long-press |
 | Inspekcja / upgrade / sprzedaż | klik na wieżę |
@@ -78,8 +80,10 @@ js/
   main.js       punkt wejścia: pętla gry, TD_DEBUG, listenery resize/orientation
   state.js      stan gry (state, world: towers/enemies/projs/effects/…), reset
   config.js     balans: wieże, wrogowie, fale, krzywe HP/prędkości
-  board.js      plansza: siatka, ścieżka (waypoints), pointAt/dirsAt
-  render.js     rysowanie: statyczne tło, wieże, wrogowie, pociski, efekty, fitCanvas
+   board.js      plansza: siatka, ścieżka (setWaypoints), pointAt/dirsAt
+   mapgen.js     generator losowych ścieżek (waypoints) + pathCells
+   mapsel.js     wybór mapy: 5 losowych map, miniaturki, select/nextMap/generateMaps
+   render.js     rysowanie: statyczne tło (rebuildBG), miniatury, wieże, wrogowie, pociski, efekty, fitCanvas
   update.js     krok symulacji: spawn, ruch, strzały, pociski, fx, koniec fali
   combat.js     spawnEnemy, acquire (celowanie), fire, hitEnemy
   towers.js     akcje: canPlace, placeTower, doUpgrade, doSell, towerStats
@@ -101,6 +105,9 @@ Globalny obiekt `window.TD_DEBUG` udostępnia stan do inspekcji i sterowania z k
 TD_DEBUG.state            // { phase, gold, lives, wave, … }
 TD_DEBUG.towers           // aktualna lista wież
 TD_DEBUG.enemies          // aktualna lista wrogów
+TD_DEBUG.map              // aktywna mapa { wp, len, thumb }
+TD_DEBUG.selectMap(i)     // zmień mapę (0–4)
+TD_DEBUG.regenerateMaps() // nowa seria losowych map
 TD_DEBUG.sendWave()       // wyślij falę
 TD_DEBUG.placeTower('cannon', 5, 3)
 TD_DEBUG.stats(tower)     // statystyki wieży po ulepszeniach

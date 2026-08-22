@@ -7,8 +7,9 @@ import { audio, sfx } from './audio.js';
 import { addFloat } from './fx.js';
 import { placeTower, doUpgrade, doSell } from './towers.js';
 import { sendWave } from './waves.js';
-import { syncHud, checkOrientation, hideOverlay, shopBtns } from './dom.js';
+import { syncHud, checkOrientation, hideOverlay, showStartScreen, shopBtns } from './dom.js';
 import { cvs } from './render.js';
+import { generateMaps, nextMap } from './mapsel.js';
 
 function mousePos(ev){
   const r=cvs.getBoundingClientRect();
@@ -106,7 +107,13 @@ $('mute').addEventListener('click',()=>{ state.muted=!state.muted; syncHud(); })
 $('ovBtn').addEventListener('click',()=>{
   audio(); // unlock on user gesture
   if(state.phase==='start'){ state.phase='build'; hideOverlay(); sfx('wavestart'); }
-  else{ resetWorld(); state.phase='build'; hideOverlay(); sfx('wavestart'); }
+  else{
+    // Play Again -> back to the start screen with a fresh set of maps
+    resetWorld();
+    generateMaps();
+    showStartScreen();
+    sfx('build');
+  }
   syncHud();
   checkOrientation();
 });
@@ -115,6 +122,8 @@ document.addEventListener('keydown',ev=>{
   if(ev.key==='m'||ev.key==='M'){ state.muted=!state.muted; syncHud(); return; }
   if(state.phase==='start'){
     if(ev.key==='1'||ev.key==='2'||ev.key==='3'){ $('ovDiff').children[+ev.key-1].click(); return; }
+    if(ev.key==='ArrowRight'){ nextMap(1); return; }
+    if(ev.key==='ArrowLeft'){ nextMap(-1); return; }
     if(ev.key==='Enter'||ev.key===' '){ $('ovBtn').click(); } return;
   }
   if(state.phase==='over'||state.phase==='win'){ if(ev.key==='Enter') $('ovBtn').click(); return; }

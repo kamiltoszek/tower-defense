@@ -1,6 +1,6 @@
 /* ============================== rendering ============================== */
 import { TAU, clamp, rgba, rr, $ } from './util.js';
-import { CELL, COLS, ROWS, W, H, pathSet, pts, TOTAL_LEN, pathDirs } from './board.js';
+import { CELL, COLS, ROWS, W, H, pathSet, pts, TOTAL_LEN, pathDirs, setWaypoints } from './board.js';
 import { TOWERS, ETYPES, MAX_LEVEL } from './config.js';
 import { state, world, mouse } from './state.js';
 import { canPlace, towerStats } from './towers.js';
@@ -18,9 +18,9 @@ function shade(hex,amt){ // toward black
 }
 function hash(c,r,s){ let h=(((c+1)*73856093)^((r+1)*19349663)^((s+1)*83492791))>>>0; h=(h*1664525+1013904223)>>>0; return h/4294967296; }
 
-/* Static background layer (built once) */
+/* Static background layer (rebuilt when the map changes) */
 const bg=document.createElement('canvas'); bg.width=W; bg.height=H;
-(function buildBG(){
+function buildBG(){
   const b=bg.getContext('2d');
   b.fillStyle='#10151f'; b.fillRect(0,0,W,H);
   // grass: per-cell tonal variation so the field doesn't read as flat
@@ -106,7 +106,18 @@ const bg=document.createElement('canvas'); bg.width=W; bg.height=H;
   vg.addColorStop(0,'rgba(0,0,0,0)');
   vg.addColorStop(1,'rgba(4,7,13,0.5)');
   b.fillStyle=vg; b.fillRect(0,0,W,H);
-})();
+}
+buildBG();
+export function rebuildBG(){ buildBG(); }
+/* Thumbnail for the map picker: applies the given waypoints, renders the
+ * full background, downscales it. The caller restores the live board. */
+export function makeThumb(wp,w=192,h=120){
+  setWaypoints(wp);
+  buildBG();
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  c.getContext('2d').drawImage(bg,0,0,w,h);
+  return c;
+}
 
 function drawRange(x,y,r,color){
   ctx.beginPath(); ctx.arc(x,y,r,0,TAU);
