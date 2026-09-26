@@ -13,6 +13,7 @@ import './input.js';
 addEventListener('resize',fitCanvas);
 addEventListener('orientationchange',()=>setTimeout(fitCanvas,60));
 addEventListener('touchstart',()=>audio(),{once:true,passive:true}); // unlock mobile audio
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{}); // offline support
 
 /* debug handle (also used by automated tests) */
 window.TD_DEBUG={

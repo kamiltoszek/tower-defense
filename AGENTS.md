@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Tower Defense game in vanilla JavaScript ES modules. Single page (`index.html` holds markup + all CSS), graphics drawn on `<canvas>`, audio synthesized with WebAudio. Zero dependencies, zero image/font assets, no framework, no build step, no `package.json`, no tests, no CI. PWA-ready via `manifest.webmanifest` (no service worker).
+Tower Defense game in vanilla JavaScript ES modules. Single page (`index.html` holds markup + all CSS), graphics drawn on `<canvas>`, audio synthesized with WebAudio. Zero dependencies, zero image/font assets, no framework, no build step, no `package.json`, no tests. PWA: `manifest.webmanifest` + `sw.js` (network-first service worker, registered in `main.js`). CI only deploys: `.github/workflows/pages.yml` publishes to GitHub Pages on push to `main`.
 
 See `PRODUCT.md` for tone and design principles, `README.md` (Polish) for gameplay, balance tables, controls and per-file roles.
 
@@ -59,6 +59,8 @@ Keep this API stable — it is used by automated browser tests.
 - Difficulty (`DIFFS`): Easy/Normal/Hard end after 20/25/30 waves (`WAVES` has 30 entries); boss every 5th wave. Enemy HP = base × `waveHpMul(w)` × difficulty `hp` (bosses use `bossHp(w)`).
 
 ## Gotchas
+
+- **Adding/renaming a shipped file:** add it to `ASSETS` in `sw.js` and bump `VERSION`, and make sure the copy step in `.github/workflows/pages.yml` includes it — otherwise it's missing offline or on Pages.
 
 - `AudioContext` is created lazily on first user gesture (touchstart / Start button) to unlock mobile audio. Never instantiate it at module load.
 - Touch input (`input.js`) is a one-finger state machine: long-press (500 ms) = cancel; synthetic mouse clicks within 600 ms of `touchend` are suppressed (`lastTouchEnd`). Preserve both when editing input.

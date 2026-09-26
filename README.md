@@ -14,6 +14,47 @@ cd tower-defense
 
 Ręcznie: `python3 -m http.server 9100` → http://localhost:9100
 
+## Dystrybucja
+
+### Web + PWA (GitHub Pages)
+
+Gra jest PWA: `manifest.webmanifest` + service worker `sw.js` (network-first — online zawsze świeże pliki, offline z cache). Deploy robi workflow `.github/workflows/pages.yml` przy każdym pushu na `main`.
+
+Jednorazowa konfiguracja repo: **Settings → Pages → Source: GitHub Actions**. Gra będzie pod `https://<user>.github.io/<repo>/` (wszystkie ścieżki są względne, więc podkatalog działa).
+
+Instalacja na urządzeniach:
+- **Android / Chrome / Edge** — przeglądarka sama proponuje „Zainstaluj aplikację” (albo menu → Zainstaluj).
+- **iOS / iPadOS** — Safari → Udostępnij → „Do ekranu początkowego”. iOS nie pokazuje promptu instalacji.
+
+Dodajesz nowy plik do gry? Dopisz go do `ASSETS` w `sw.js`, podbij `VERSION` i dodaj do kroku kopiowania w `pages.yml`.
+
+### Sklepy (App Store / Google Play) — Capacitor
+
+[Capacitor](https://capacitorjs.com) (od twórców Ionic) opakowuje gotową aplikację webową w natywną powłokę iOS/Android. Aplikacja działa w systemowym WebView (WKWebView na iOS, Android System WebView) i jest ładowana z plików w paczce, nie z internetu. Nie przepisujesz kodu: wskazujesz katalog z `index.html`, a Capacitor generuje normalne projekty Xcode i Android Studio. Z nich budujesz `.ipa`/`.aab` do sklepów. Przez pluginy JS masz dostęp do natywnych API (haptyka, status bar, splash screen, Game Center przez pluginy społeczności itd.).
+
+Czym różni się od alternatyw:
+- **Expo / React Native** renderuje natywne komponenty z kodu React. Tej gry (canvas + DOM, bez frameworka) nie da się tam przenieść bez przepisania.
+- **PWABuilder / Bubblewrap (TWA)** pakuje PWA do Google Play jako Trusted Web Activity, czyli Chrome bez paska adresu. Najtańsza droga na Androida, ale gra ładuje się wtedy z URL-a, a nie z paczki.
+- **Capacitor** daje jedną paczkę z plikami lokalnie, działa offline i obsługuje oba sklepy.
+
+Szkic (wymaga Node.js; build iOS wymaga macOS + Xcode):
+
+```bash
+npm init -y
+npm i @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
+mkdir www && cp -r index.html manifest.webmanifest sw.js *.png js www/
+npx cap init "Tower Defense" com.example.towerdefense --web-dir www
+npx cap add ios && npx cap add android
+npx cap sync            # po każdej zmianie w www/
+npx cap open ios        # Xcode → Archive → App Store Connect
+npx cap open android    # Android Studio → Build → Generate Signed Bundle (.aab)
+```
+
+Koszty i wymagania:
+- **Apple Developer Program** kosztuje 99 USD/rok. Review trwa zwykle 1–3 dni. Wytyczna 4.2 („minimum functionality”) odrzuca aplikacje, które są tylko opakowaną stroną. Gra działająca offline, bez UI przeglądarki, zwykle przechodzi.
+- **Google Play Console** kosztuje 25 USD jednorazowo. Nowe konta prywatne muszą przejść closed test (12 testerów przez 14 dni), zanim opublikują wersję produkcyjną.
+- W WebView lepiej wyłączyć service worker, bo pliki są już lokalne. Każda aktualizacja gry oznacza nowy build i nowe review.
+
 ## Rozgrywka
 
 - Fale wrogów, **boss co 5. falę**
@@ -77,6 +118,8 @@ Na telefonach w pionie gra auto-pauzuje i prosi o obrócenie urządzenia.
 
 ```
 index.html      markup + style (jeden plik, bez zewnętrznych zależności)
+sw.js           service worker (offline, network-first)
+.github/workflows/pages.yml  deploy na GitHub Pages
 start.sh        start serwera HTTP + otwiera przeglądarkę
 js/
   main.js       punkt wejścia: pętla gry, TD_DEBUG, listenery resize/orientation
