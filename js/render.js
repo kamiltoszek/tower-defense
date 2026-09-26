@@ -417,7 +417,9 @@ export function fitCanvas(){
   let s;
   if(isStacked()){
     const availW=Math.max(200,mainEl.clientWidth-2);
-    const availH=Math.max(160,innerHeight-hudEl.offsetHeight-28);
+    const bs=getComputedStyle(document.body); // padding includes safe-area insets
+    const padV=parseFloat(bs.paddingTop)+parseFloat(bs.paddingBottom);
+    const availH=Math.max(160,innerHeight-hudEl.offsetHeight-padV);
     s=Math.min(availW/W,availH/H,1);
   }else{
     s=Math.min(Math.max(200,stageEl.clientWidth-2)/W,1);
