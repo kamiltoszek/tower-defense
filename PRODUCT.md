@@ -2,7 +2,7 @@
 
 ## Product
 
-Tower Defense: a single-page HTML5 canvas game in vanilla ES-module JavaScript. 20 waves, 4 tower types, 3 upgrades each, boss every 5th wave. Zero dependencies: no framework, no build tools, no image or font assets, no package.json. All graphics are hand-drawn on `<canvas>`, all audio is synthesized with WebAudio.
+Tower Defense: a single-page HTML5 canvas game in vanilla ES-module JavaScript. 20, 25 or 30 waves (Easy / Normal / Hard), 4 tower types, 3 upgrades each, boss every 5th wave. Zero dependencies: no framework, no build tools, no image or font assets, no package.json. All graphics are hand-drawn on `<canvas>`, all audio is synthesized with WebAudio.
 
 ## Users
 

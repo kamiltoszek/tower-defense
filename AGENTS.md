@@ -1,38 +1,71 @@
 # AGENTS.md
 
-Vanilla JavaScript ES-modules Tower Defense game. No framework, no build tools, no package.json, no tests, no CI. All graphics drawn on `<canvas>`, all audio synthesized via WebAudio. Zero assets, zero dependencies.
+Tower Defense game in vanilla JavaScript ES modules. Single page (`index.html` holds markup + all CSS), graphics drawn on `<canvas>`, audio synthesized with WebAudio. Zero dependencies, zero image/font assets, no framework, no build step, no `package.json`, no tests, no CI. PWA-ready via `manifest.webmanifest` (no service worker).
+
+See `PRODUCT.md` for tone and design principles, `README.md` (Polish) for gameplay, balance tables, controls and per-file roles.
 
 ## Running
 
-- Must be served over HTTP — ES modules do **not** run from `file://`.
-- `./start.sh` (default port 8000, opens browser) or `./start.sh 9000` for a custom port.
-- Manually: `python3 -m http.server 8000` → http://localhost:8000.
-- There are no build/lint/test commands. Verify changes by playing in a browser; check the console for module load errors (no build step — bad imports only fail at runtime).
+- Must be served over HTTP — ES modules do **not** load from `file://`.
+- `./start.sh` (default port 9100, opens browser) or `./start.sh <port>`.
+- Manually: `python3 -m http.server 9100` → http://localhost:9100.
+- No build/lint/test commands. Bad imports fail only at runtime — after any change, load the page and check the console for module errors.
 
 ## Verification
 
-`window.TD_DEBUG` (set in `js/main.js`) is the console handle for inspection and scripted testing:
+`window.TD_DEBUG` (defined in `js/main.js`) is the console handle for inspection and scripted testing:
 
-- Read: `TD_DEBUG.state`, `.towers`, `.enemies`, `.projs`, `.map`
-- Act: `TD_DEBUG.sendWave()`, `TD_DEBUG.placeTower(type, col, row)`, `TD_DEBUG.doUpgrade(tw)`, `TD_DEBUG.doSell(tw)`, `TD_DEBUG.stats(tw)`, `TD_DEBUG.selectMap(i)`, `TD_DEBUG.regenerateMaps()`
+- Read: `TD_DEBUG.state`, `.towers`, `.enemies`, `.projs`, `.map` (active map `{ wp, len, thumb }`)
+- Act: `sendWave()`, `placeTower(type, col, row)`, `doUpgrade(tw)`, `doSell(tw)`, `stats(tw)`, `selectMap(i)` (0–4), `regenerateMaps()`
 
-## Architecture
+Keep this API stable — it is used by automated browser tests.
 
-- Entrypoint: `index.html` → `js/main.js` (game loop, `TD_DEBUG`, resize/orientation listeners). Per-file roles are documented in `README.md` (Polish).
-- `js/state.js` is the only shared state:
-  - `state` — game status, mutated in place. It is `export let` and is **re-assigned** by `resetWorld()`, so import the binding and never cache it in a `const`.
-  - `world` — all simulation collections (`towers`, `enemies`, `projs`, `effects`, `particles`, `floats`) plus `towerCell` Map. Collections are re-assigned after `.filter()` passes, so always go through `world.*`, never hold a direct reference.
-- The board path is swappable: `board.js` exports `pathSet`, `pts`, `TOTAL_LEN`, `pathDirs` as `export let` bindings, re-assigned by `setWaypoints(wp)`. Random maps come from `mapgen.js` (`genWaypoints()`, right-monotonic axis-aligned waypoints); the start-screen picker lives in `mapsel.js` (5 candidates, thumbnails via `render.makeThumb`). Same rule as `state`: import the bindings, never cache the arrays.
-- All balance lives in `js/config.js` (`TOWERS`, `ETYPES`, `WAVES`, HP/speed curves). The tables in `README.md` mirror these values — update the README when changing balance.
-- Fixed logical canvas 960×600 (`W`/`H`, `CELL=40`, 24×15 grid in `js/board.js`). The canvas is scaled by CSS only (`fitCanvas`, scale ≤ 1); all drawing and game coordinates use the 960×600 logical space. Input is mapped via `getBoundingClientRect()` scaling (`mousePos` in `js/input.js`). Never resize the canvas `width`/`height` attributes to fit the viewport.
-- Dependency direction: `main → input → dom → render → state`; `mapsel.js` (map picker UI) may touch DOM and imports `makeThumb`/`rebuildBG` from `render.js`. Simulation modules (`update`, `combat`, `towers`) stay DOM-free, communicating only via `state`/`world`, `fx`, and `sfx`. Don't add DOM access to simulation code; the known exception is `waves.js` importing `showOverlay` from `dom.js`.
-- Phase machine: `start → build ⇄ wave → over/win → start` (Play Again returns to the start screen with a fresh random map set). `update(dt)` runs only in `build`/`wave` when not paused; dt is clamped to ≤ 0.1 and scaled by `state.speed` (1|2).
-- Path cells and occupied tower cells are keyed as `"$col,$row"` strings in both `board.pathSet` and `world.towerCell` (0-based grid coords). Entity x/y are cell centers (`c*CELL + CELL/2`).
+## Module map (`js/`)
+
+| Module | Role |
+|--------|------|
+| `main.js` | Entry: rAF loop, `TD_DEBUG`, resize/orientation listeners, initial `generateMaps()` |
+| `state.js` | `state` (game status), `world` (entity collections), `resetWorld()`, `mouse` |
+| `config.js` | All balance: `TOWERS`, `ETYPES`, `DIFFS`, `WAVES`, HP/speed curves, `waveBonus`, `buildQueue` |
+| `board.js` | Grid constants, live path bindings, `setWaypoints`, `pointAt`, `dirsAt` |
+| `mapgen.js` | `genWaypoints()` random path, `pathCells(wp)` |
+| `mapsel.js` | Start-screen map picker (5 candidates): `generateMaps`, `select`, `nextMap`, `currentMap` |
+| `update.js` | Simulation step: spawn, move, leak, tower fire, projectiles, fx aging, wave end |
+| `combat.js` | `spawnEnemy`, `acquire` (targeting), `fire`, `hitEnemy` |
+| `towers.js` | `canPlace`, `placeTower`, `doUpgrade`, `doSell`, `towerStats`, `upCost`, `sellValue` |
+| `waves.js` | `sendWave`, `doGameOver`, `doVictory` |
+| `render.js` | Canvas drawing, static `bg` layer (`rebuildBG`), `makeThumb`, `fitCanvas` |
+| `dom.js` | HUD, shop, info panel, overlays/start screen, `checkOrientation` |
+| `input.js` | Mouse, touch, keyboard, buttons |
+| `fx.js` / `audio.js` / `util.js` | Floating text + particles / synthesized `sfx` / helpers (`$`, `clamp`, `rand`, `rgba`, `rr`, `TAU`) |
+
+## Architecture rules
+
+- **Shared state lives only in `state.js`.**
+  - `state` is `export let` and is **re-assigned** by `resetWorld()` — import the binding, never cache it in a `const`.
+  - `world` collections (`towers`, `enemies`, `projs`, `effects`, `particles`, `floats`, `towerCell`) are re-assigned after `.filter()` passes — always go through `world.*`, never hold a direct array reference.
+- **Board path is swappable.** `board.js` exports `pathSet`, `pts`, `TOTAL_LEN`, `pathDirs` as `export let` bindings, re-assigned by `setWaypoints(wp)`. Same rule: import the bindings, never cache the arrays.
+- **Waypoints** (`mapgen.genWaypoints`) go from column 0 to column 23, column stops strictly increasing (path never self-crosses), consecutive waypoints differ in exactly one coordinate (axis-aligned). `pointAt`/`dirsAt` depend on this. Path length is 24–108 cells.
+- **Background cache.** The `bg` canvas in `render.js` is built once per map. Every code path calling `setWaypoints()` must also call `rebuildBG()` (as `mapsel.select`/`generateMaps` do), otherwise the old road is drawn.
+- **Balance only in `js/config.js`.** `README.md` tables mirror these values — update the README whenever balance changes. UI work never changes balance numbers.
+- **Fixed logical canvas 960×600** (`W`/`H`, `CELL=40`, 24×15 grid). Scaled by CSS only (`fitCanvas`, scale ≤ 1). All game and drawing coordinates use logical space; input maps via `getBoundingClientRect()` (`mousePos` in `input.js`). Never resize the canvas `width`/`height` attributes to fit the viewport.
+- **Grid keys** for path cells and occupied tower cells are `"col,row"` strings (0-based) in both `pathSet` and `world.towerCell`. Entity `x`/`y` are cell centers (`c*CELL + CELL/2`).
+- **Dependency direction:** `main → input → dom → render → state`. Simulation modules (`update`, `combat`, `towers`) stay DOM-free and talk only via `state`/`world`, `fx`, `sfx`. Known exceptions: `waves.js` imports `showOverlay` from `dom.js`; `mapsel.js` touches DOM and imports `makeThumb`/`rebuildBG` from `render.js`; `render.js` reads `canPlace`/`towerStats` from `towers.js`. Don't add new DOM access to simulation code.
+
+## Game flow
+
+- Phases: `start → build ⇄ wave → over | win → start`. Play Again returns to the start screen with a fresh random map set.
+- `update(dt)` runs only in `build`/`wave` and when not paused; `dt` is clamped to ≤ 0.1 s, then scaled by `state.speed` (1 | 2).
+- Difficulty (`DIFFS`): Easy/Normal/Hard end after 20/25/30 waves (`WAVES` has 30 entries); boss every 5th wave. Enemy HP = base × `waveHpMul(w)` × difficulty `hp` (bosses use `bossHp(w)`).
 
 ## Gotchas
 
-- `AudioContext` is created lazily on first user gesture (touchstart / Start button) for mobile audio unlock. Never instantiate it at module load time.
-- Touch input (`js/input.js`) is a one-finger state machine: long-press (500 ms) = cancel, and synthetic mouse clicks within 600 ms of `touchend` are suppressed (`lastTouchEnd`). Preserve both when editing input handling.
-- Phones in portrait auto-pause with a "rotate" overlay (`checkOrientation` in `js/dom.js`).
-- The static background layer (`bg` canvas in `js/render.js`) is built once per map. Any code path that calls `setWaypoints()` must also call `rebuildBG()` (see `mapsel.select`), or the board will render with the previous map's road.
-- Code and in-game UI strings are English; `README.md` is Polish.
+- `AudioContext` is created lazily on first user gesture (touchstart / Start button) to unlock mobile audio. Never instantiate it at module load.
+- Touch input (`input.js`) is a one-finger state machine: long-press (500 ms) = cancel; synthetic mouse clicks within 600 ms of `touchend` are suppressed (`lastTouchEnd`). Preserve both when editing input.
+- Phones in portrait auto-pause behind a "rotate" overlay (`checkOrientation` in `dom.js`).
+- Keys `1`–`3` pick difficulty on the start screen but `1`–`4` pick towers in-game — `input.js` branches on `state.phase`.
+
+## Conventions
+
+- Code, comments and in-game UI strings: English. `README.md`: Polish.
+- Match existing style: compact code, `/* ===== section ===== */` file headers. No new dependencies or assets (icons as inline SVG, no emoji in UI).

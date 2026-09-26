@@ -69,7 +69,7 @@ export function update(dt){
         let hits=0;
         for(const e of world.enemies){
           if(e.dead) continue;
-          if(Math.hypot(e.x-p.tx,e.y-p.ty)<=p.splash+e.r){ hitEnemy(e,p.dmg); if(!e.dead||true) hits++; }
+          if(Math.hypot(e.x-p.tx,e.y-p.ty)<=p.splash+e.r){ hitEnemy(e,p.dmg); hits++; }
         }
         if(hits>=2) state.multiHits++;
         state.shake=Math.max(state.shake,0.18);

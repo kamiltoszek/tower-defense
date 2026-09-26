@@ -8,11 +8,11 @@ Moduły ES nie działają z `file://` — potrzebny jest serwer HTTP:
 
 ```bash
 cd tower-defense
-./start.sh            # domyślnie port 8000, otwiera przeglądarkę
+./start.sh            # domyślnie port 9100, otwiera przeglądarkę
 ./start.sh 9000       # własny port
 ```
 
-Ręcznie: `python3 -m http.server 8000` → http://localhost:8000
+Ręcznie: `python3 -m http.server 9100` → http://localhost:9100
 
 ## Rozgrywka
 
@@ -20,7 +20,7 @@ Ręcznie: `python3 -m http.server 8000` → http://localhost:8000
 - Wieże stawiasz na trawie — nigdy na drodze
 - Po każdej fali bonus złota; sprzedaż wieży zwraca 70% inwestycji
 - Przed startem wybierasz **jedną z 5 losowych map** (miniaturki na ekranie startowym) i poziom trudności
-- Im krótsza droga, tym szybciej przechodzą wrogowie — mapy różnią się długością (24–96 pól)
+- Im krótsza droga, tym szybciej przechodzą wrogowie — mapy różnią się długością (24–108 pól)
 
 ### Poziomy trudności
 
@@ -59,6 +59,8 @@ HP wrogów rośnie z falą (`1 + 0.08·(w−1) + 0.005·(w−1)²`), bossy jeszc
 | Akcja | Klawisz / gest |
 |-------|----------------|
 | Wybór mapy (start) | klik miniaturkę lub `←`/`→` |
+| Poziom trudności (start) | klik lub `1`–`3` |
+| Start gry (start) | `Enter` / `Space` lub przycisk |
 | Wybór wieży | `1`–`4` lub klik w shop |
 | Anulowanie | `Esc` / prawy klik / long-press |
 | Inspekcja / upgrade / sprzedaż | klik na wieżę |
