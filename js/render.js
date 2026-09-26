@@ -411,20 +411,26 @@ export function draw(){
 }
 
 /* ---------- responsive canvas sizing ---------- */
-const stageEl=$('stage'), hudEl=$('hud'), mainEl=document.querySelector('main');
+const stageEl=$('stage'), hudEl=$('hud'), mainEl=document.querySelector('main'), panelEl=$('panel');
 const isStacked=()=>innerWidth<=960;
+const isTouch=matchMedia('(pointer: coarse)');
 export function fitCanvas(){
-  let s;
+  const bs=getComputedStyle(document.body); // padding includes safe-area insets
+  const padV=parseFloat(bs.paddingTop)+parseFloat(bs.paddingBottom);
+  const availH=Math.max(160,innerHeight-hudEl.offsetHeight-padV);
+  let s, stageH='';
   if(isStacked()){
     const availW=Math.max(200,mainEl.clientWidth-2);
-    const bs=getComputedStyle(document.body); // padding includes safe-area insets
-    const padV=parseFloat(bs.paddingTop)+parseFloat(bs.paddingBottom);
-    const availH=Math.max(160,innerHeight-hudEl.offsetHeight-padV);
     s=Math.min(availW/W,availH/H,1);
   }else{
-    s=Math.min(Math.max(200,stageEl.clientWidth-2)/W,1);
+    s=Math.min(Math.max(200,stageEl.clientWidth-2)/W,(availH-2)/H,1);
+    // touch (iPad): board is wider than the screen's aspect, so stretch stage+panel
+    // to the full height (canvas letterboxed) instead of leaving dead space below
+    if(isTouch.matches) stageH=Math.max(Math.round(H*clamp(s,0.25,1))+2,availH)+'px';
   }
   s=clamp(s,0.25,1);
   cvs.style.width=Math.round(W*s)+'px';
   cvs.style.height=Math.round(H*s)+'px';
+  stageEl.style.height=stageH;
+  panelEl.style.height=stageH;
 }
