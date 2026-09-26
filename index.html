@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Tower Defense">
 <style>
   :root{
@@ -19,14 +19,14 @@
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
   /* solid root bg: iOS standalone paints area outside body (home-indicator strip) from html */
-  html{ height:100%; background:var(--bg); }
+  html{ background:var(--bg); }
   body{
-    min-height:100%;
+    min-height:100vh;
     background:radial-gradient(1200px 700px at 50% -10%, #131a2c, var(--bg));
     color:var(--text);
     font-family:'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
     display:flex; justify-content:center; align-items:flex-start;
-    /* viewport-fit=cover + black-translucent status bar: keep HUD clear of notch/status bar/home indicator */
+    /* opaque "black" status bar (black-translucent blurs HUD under Liquid Glass, WebKit #301108); insets keep clear of notch/home indicator */
     padding:max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
             max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
     user-select:none; -webkit-user-select:none;
