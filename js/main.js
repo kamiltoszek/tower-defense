@@ -12,6 +12,9 @@ import './input.js';
 
 addEventListener('resize',fitCanvas);
 addEventListener('orientationchange',()=>setTimeout(fitCanvas,60));
+visualViewport?.addEventListener('resize',fitCanvas);
+addEventListener('pageshow',fitCanvas);
+for(const ms of [250,1000]) setTimeout(fitCanvas,ms); // iOS PWA viewport settles late on cold start
 addEventListener('touchstart',()=>audio(),{once:true,passive:true}); // unlock mobile audio
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{}); // offline support
 

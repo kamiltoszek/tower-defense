@@ -414,10 +414,32 @@ export function draw(){
 const stageEl=$('stage'), hudEl=$('hud'), mainEl=document.querySelector('main'), panelEl=$('panel');
 const isStacked=()=>innerWidth<=960;
 const isTouch=matchMedia('(pointer: coarse)');
+const isStandalone=matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches||navigator.standalone===true;
+// iOS standalone PWA reports a stale, too-small innerHeight on cold start; measure with fixed probes instead
+function probe(css){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;left:0;width:0;visibility:hidden;pointer-events:none;'+css;
+  document.body.appendChild(el); return el;
+}
+const fixedProbe=probe('top:0;bottom:0;'), lvhProbe=isStandalone?probe('top:0;height:100lvh;'):null;
+function viewportH(){
+  return Math.max(innerHeight, fixedProbe.offsetHeight, lvhProbe?lvhProbe.offsetHeight:0);
+}
+// viewport debug readout: ?debug in URL, or tap the HUD brand 5x quickly (installed PWA has no URL bar)
+const debugEl=probe('width:auto;bottom:0;z-index:99;font:11px monospace;color:#0f0;background:#000c;padding:4px;');
+const setDebug=on=>{ debugEl.style.visibility=on?'visible':'hidden'; fitCanvas(); };
+let taps=[];
+document.querySelector('.brand').addEventListener('click',()=>{
+  const t=performance.now(); taps=taps.filter(x=>t-x<2000); taps.push(t);
+  if(taps.length>=5){ taps=[]; setDebug(debugEl.style.visibility!=='visible'); }
+});
+if(/[?&]debug\b/.test(location.search)) queueMicrotask(()=>setDebug(true));
 export function fitCanvas(){
   const bs=getComputedStyle(document.body); // padding includes safe-area insets
   const padV=parseFloat(bs.paddingTop)+parseFloat(bs.paddingBottom);
-  const availH=Math.max(160,innerHeight-hudEl.offsetHeight-padV);
+  const vh=viewportH();
+  const availH=Math.max(160,vh-hudEl.offsetHeight-padV);
+  if(debugEl.style.visibility==='visible') debugEl.textContent=`inner ${innerWidth}x${innerHeight} fixed ${fixedProbe.offsetHeight} lvh ${lvhProbe?lvhProbe.offsetHeight:'-'} vv ${visualViewport?Math.round(visualViewport.height):'-'} screen ${screen.width}x${screen.height} standalone ${isStandalone} coarse ${isTouch.matches} availH ${Math.round(availH)}`;
   let s, stageH='';
   if(isStacked()){
     const availW=Math.max(200,mainEl.clientWidth-2);
