@@ -2,6 +2,8 @@
 
 Klasyczna gra Tower Defense w czystym JavaScript (ES modules) — bez frameworków, bez build tools, bez assetów. Grafika rysowana na `<canvas>`, dźwięki syntezowane przez WebAudio API.
 
+🎮 **Zagraj online:** https://kamiltoszek.github.io/tower-defense/
+
 ## Uruchomienie
 
 Moduły ES nie działają z `file://` — potrzebny jest serwer HTTP:
