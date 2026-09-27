@@ -5,12 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Tower Defense</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0b0e15">
+<meta name="theme-color" content="#131826">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Tower Defense">
 <style>
   :root{
@@ -26,7 +25,7 @@
     color:var(--text);
     font-family:'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
     display:flex; justify-content:center; align-items:flex-start;
-    /* opaque "black" status bar (black-translucent blurs HUD under Liquid Glass, WebKit #301108); insets keep clear of notch/home indicator */
+    /* default (opaque) status bar: black-translucent blurs HUD under Liquid Glass, WebKit #301108; insets keep clear of notch/home indicator */
     padding:max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
             max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
     user-select:none; -webkit-user-select:none;
@@ -237,9 +236,20 @@
     .stat b{ font-size:13px; }
     header button{ padding:7px 9px; font-size:12px; }
   }
+  /* iOS 26/27 standalone blurs the top edge unless a solid fixed element sits there; Safari also
+     samples its colour for the status bar (keep in sync with theme-color) and it hides content
+     scrolling above the sticky HUD */
+  #topCover{ display:none; }
+  @media (display-mode: standalone), (display-mode: fullscreen){
+    #topCover{
+      display:block; position:fixed; inset:0 0 auto; height:8px; z-index:30; pointer-events:none;
+      background:var(--panel);
+    }
+  }
 </style>
 </head>
 <body>
+<div id="topCover" aria-hidden="true"></div>
 <div id="wrap">
   <header id="hud">
     <div class="brand">
